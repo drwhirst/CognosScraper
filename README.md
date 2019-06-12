@@ -1,25 +1,6 @@
-# README
-
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
 # CognosScraper
+
+*Deployment Instructions
+⋅⋅*You need to download the correct chrome driver from this URL:
+⋅⋅*[Chromedriver Link](http://chromedriver.storage.googleapis.com/index.html?path=76.0.3809.12/)
+⋅⋅*After downloading and unpacking chromedriver move it into your path: `mv your/driver/save/path usr/local/bin`
