@@ -1,0 +1,2 @@
+class IbmInfo < ApplicationRecord
+end

@@ -1,0 +1,5 @@
+<ul>
+<% @infos.each do |i| %>
+    <li><%= i.IBMid %>, <%= link_to i.report_name, i %></li>
+<% end %>
+</ul>
