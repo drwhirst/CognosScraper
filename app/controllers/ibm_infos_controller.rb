@@ -62,8 +62,6 @@ class IbmInfosController < ApplicationController
             count += 1
         end
 
-
-
         #is it a bar chart?
         if doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
             bar_chart_one = doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
