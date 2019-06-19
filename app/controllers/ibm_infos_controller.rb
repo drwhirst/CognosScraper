@@ -46,20 +46,22 @@ class IbmInfosController < ApplicationController
         page_xml[page_count] = {:xml => Nokogiri::HTML(b.html)}
 
         #get page names to click later
-        page_count.times do
-            name = doc.xpath("//*[@class=\"clsTabBox_inactive\"]")[count].text
-            page_names << name
-            count += 1
-        end
+        if page_count > 0 #BUT ONLY IF IT IS A MULTI PAGE REPORT
+            page_count.times do
+                name = doc.xpath("//*[@class=\"clsTabBox_inactive\"]")[count].text
+                page_names << name
+                count += 1
+            end
 
-        count = 0
+            count = 0
 
-        #go to each page and scrape the XML
-        page_count.times do
-            b.div(text: page_names[count]).click
-            b.wait
-            page_xml[count] = {:xml => Nokogiri::HTML(b.html)}
-            count += 1
+            #go to each page and scrape the XML
+            page_count.times do
+                b.div(text: page_names[count]).click
+                b.wait
+                page_xml[count] = {:xml => Nokogiri::HTML(b.html)}
+                count += 1
+            end
         end
 
         #is it a bar chart?
