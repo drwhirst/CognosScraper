@@ -16,6 +16,9 @@ class IbmInfosController < ApplicationController
         @info.IBMid = params[:ibm_info][:IBMid]
         @info.password = params[:ibm_info][:password]
         @info.report_name = params[:ibm_info][:report_name]
+        page_names = []
+        count = 0
+        page_xml = {}
 
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
@@ -26,18 +29,40 @@ class IbmInfosController < ApplicationController
         b.text_field(name: 'password').set @info.password
         b.button(type: 'submit').click
 
-        sleep 5
+        b.wait
         b.button(type: 'submit').click
-        sleep 5
+        b.wait
 
         #Go to the report
         b.div(title: '‪sample product report‬').click #need to figure out why the variable isn't working
-        
+        b.wait
         #Switch to the correct iframe where the report document is housed
-        b.driver.switch_to.frame('rsIFrameManager_1') # Switch to numerical method to prevent brittleness
+        b.driver.switch_to.frame('rsIFrameManager_1')
 
-        #Scrape the entire XML of this page of the report
-        page_one = doc = Nokogiri::HTML(b.html)
+        #get the page count of report
+        page_count = doc.xpath("//*[@class=\"clsTabBox_inactive\"]").count
+
+        #assign the first page of the report XML to our hash
+        page_xml[page_count] = {:xml => Nokogiri::HTML(b.html)}
+
+        #get page names to click later
+        page_count.times do
+            name = doc.xpath("//*[@class=\"clsTabBox_inactive\"]")[count].text
+            page_names << name
+            count += 1
+        end
+
+        count = 0
+
+        #go to each page and scrape the XML
+        page_count.times do
+            b.div(text: page_names[count]).click
+            b.wait
+            page_xml[count] = {:xml => Nokogiri::HTML(b.html)}
+            count += 1
+        end
+
+
 
         #is it a bar chart?
         if doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
