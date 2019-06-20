@@ -34,16 +34,25 @@ class IbmInfosController < ApplicationController
         b.wait
 
         #Go to the report
-        b.div(title: '‪sample product report‬').click #need to figure out why the variable isn't working
+        b.button(title: 'My content').click
+        b.wait
+        b.div(title: @info.report_name).click
         b.wait
         #Switch to the correct iframe where the report document is housed
-        b.driver.switch_to.frame('rsIFrameManager_1')
+        if b.iframe(id: 'rsIFrameManager_1').exists?
+            b.driver.switch_to.frame('rsIFrameManager_1')
+        else
+            b.driver.switch_to.frame(1)
+        end
+        #get a basic nokogiri XML document to use for checks
+        doc = Nokogiri::HTML.parse(b.html)
 
         #get the page count of report
+
         page_count = doc.xpath("//*[@class=\"clsTabBox_inactive\"]").count
 
         #assign the first page of the report XML to our hash
-        page_xml[page_count] = {:xml => Nokogiri::HTML(b.html)}
+        page_xml[page_count] = {:xml => doc}
 
         #get page names to click later
         if page_count > 0 #BUT ONLY IF IT IS A MULTI PAGE REPORT
@@ -59,10 +68,12 @@ class IbmInfosController < ApplicationController
             page_count.times do
                 b.div(text: page_names[count]).click
                 b.wait
-                page_xml[count] = {:xml => Nokogiri::HTML(b.html)}
+                page_xml[count] = {:xml => Nokogiri::HTML.parse(b.html)}
                 count += 1
             end
         end
+
+        #PAGE 1 CHECKS
 
         #is it a bar chart?
         if doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
