@@ -19,8 +19,11 @@ class IbmInfosController < ApplicationController
         page_names = []
         count = 0
         page_xml = {}
-        dashboard = false
         report = false
+        graphs = []
+        dashboard = false
+        bottom_nav = false
+        page_count = 0
 
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
@@ -55,76 +58,113 @@ class IbmInfosController < ApplicationController
             b.driver.switch_to.frame(1)
         end
 
-        #get a basic nokogiri XML document to use for checks
+        #get a basic nokogiri XML document to use for checks and to store later
         doc = Nokogiri::HTML.parse(b.html)
 
-        #get the page count of report
-        page_count = doc.xpath("//*[@class=\"clsTabBox_inactive\"]").count
+        #reset count just in case
+        count = 0
 
-        #assign the first page of the report XML to our hash
-        page_xml[page_count] = {:xml => doc}
-
-        #get page names to click later
-        if page_count > 0 #BUT ONLY IF IT IS A MULTI PAGE REPORT
-            page_count.times do
-                name = doc.xpath("//*[@class=\"clsTabBox_inactive\"]")[count].text
-                page_names << name
-                count += 1
-            end
-
-            count = 0
-
-            #go to each page and scrape the XML
-            page_count.times do
-                b.div(text: page_names[count]).click
-                b.wait
-                page_xml[count] = {:xml => Nokogiri::HTML.parse(b.html)}
-                count += 1
-            end
-        end
-
-        #PAGE 1 CHECKS
-        area_graph = Hash.new
-        area_graph[:n_axis_values] = []
-        area_graph[:w_axis_values] = []
-        box_plot_graph = Hash.new
-        box_plot_graph[:n_axis_values] = []
-        box_plot_graph[:w_axis_value] = []
         if report == true
-            area_graph_test = page_xml[0][:xml].xpath("//*[@class=\"Rave2BundleAreaRenderer large\"]")
-            if area_graph_test.count < 0
-                area_graph[:is_there] = true
+                #Area Graph test
+                area_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.area\"]")
+                if area_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    area_graph_test.count.times do
+                        graph[:type] = 'Area'
                 
-                area_graph_test.css('text').each do |t|
-                    if t.text.include?('0')
-                        area_graph[:n_axis_values] << t.text
-                    else
-                        area_graph[:w_axis_value] << t.text
+                        area_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
                     end
                 end
-            else
-                area_graph[:is_there] = false
-            end
 
-            box_plot_test = page_xml[0][:xml].xpath("//*[@class=\"Rave2BundleBoxPlotRenderer large\"]")
-            if box_plot_test.count < 0
-                box_plot_graph[:is_there] = true
-
-                box_plot_test.css('text').each do |t|
-                    if t.text.include?('0')
-                        box_plot_graph[:n_axis_values] << t.text
-                    else
-                        box_plot_graph[:w_axis_value] << t.text
+                #river graph tests
+                river_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.river\"]")
+                if river_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    river_graph_test.count.times do
+                        graph[:type] = 'River'
+                
+                        river_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
                     end
                 end
-            else
-                box_plot_graph[:is_there] = false
+
+                #Smooth Area
+                smooth_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.smoothArea\"]")
+                if smooth_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    smooth_graph_test.count.times do
+                        graph[:type] = 'Smooth Area'
+                
+                        smooth_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
+                    end
+                end
+
+                #Box Plot graph tests
+                box_plot_test = doc.xpath("//*[@class=\"Rave2BundleBoxPlotRenderer large\"]")
+                if box_plot_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    box_plot_test.count.times do
+                        graph[:type] = 'Box Plot'
+                
+                        box_plot_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
+                        count += 1
+                    end
+                end
+                xml_page_counter += 1
             end
         end
-        #is it a bar chart?
-        if doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
-            bar_chart_one = doc.xpath("//*[@class=\"element-shape bundle-shape\"]")
-        end
+
         b.close
 
         if @info.save
