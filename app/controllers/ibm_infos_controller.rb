@@ -204,7 +204,7 @@ class IbmInfosController < ApplicationController
                     end
                 end
 
-                #Hieracrhical Packed Bubbles
+                #Hierarchical Packed Bubbles
                 hpbubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.hierarchicalPackedBubble\"]")
                 if hpbubble_graph_test.count > 0
                     graph = {}
