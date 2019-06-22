@@ -18,12 +18,9 @@ class IbmInfosController < ApplicationController
         @info.report_name = params[:ibm_info][:report_name]
         page_names = []
         count = 0
-        page_xml = {}
         report = false
         graphs = []
         dashboard = false
-        bottom_nav = false
-        page_count = 0
 
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
@@ -60,9 +57,6 @@ class IbmInfosController < ApplicationController
 
         #get a basic nokogiri XML document to use for checks and to store later
         doc = Nokogiri::HTML.parse(b.html)
-
-        #reset count just in case
-        count = 0
 
         if report == true
                 #Area Graph test
@@ -137,6 +131,30 @@ class IbmInfosController < ApplicationController
                     end
                 end
 
+                #Step Graph
+                step_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.stepArea\"]")
+                if step_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    step_graph_test.count.times do
+                        graph[:type] = 'Step'
+                
+                        step_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
+                    end
+                end
+
                 #Box Plot graph tests
                 box_plot_test = doc.xpath("//*[@class=\"Rave2BundleBoxPlotRenderer large\"]")
                 if box_plot_test.count > 0
@@ -161,8 +179,60 @@ class IbmInfosController < ApplicationController
                         count += 1
                     end
                 end
-                xml_page_counter += 1
-            end
+
+                #Bubble Graph
+                bubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.bubble\"]")
+                if bubble_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    bubble_graph_test.count.times do
+                        graph[:type] = 'Bubble'
+                
+                        bubble_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
+                    end
+                end
+
+                #Hieracrhical Packed Bubbles
+                hpbubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.hierarchicalPackedBubble\"]")
+                if hpbubble_graph_test.count > 0
+                    graph = {}
+                    arr_x = []
+                    arr_y = []
+                    hpbubble_graph_test.count.times do
+                        graph[:type] = 'Bubble'
+
+                        legend_xml = doc.css('#S_2_legend')
+                        graph[:legend] = {}
+                        graph[:legend][:min_value] = doc.css('#o_0_startLabel').text
+                        graph[:legend][:max_value] = doc.css('#o_0_endLabel').text
+                        graph[:legend[:label] = doc.css('.lgd-title').text #may pick up multiple as a class selector
+                
+                        hpbubble_graph_test.css('text').each do |t|
+                            if t.text.include?('0')
+                                arr_y << t.text
+                            else
+                                arr_x << t.text
+                            end
+                        end
+                        arr_y.delete_if { |x| x.empty? }
+                        arr_x.delete_if { |x| x.empty? }
+                        graph[:y_values] = arr_y
+                        graph[:x_values] = arr_x
+                        graphs << graph
+                    end
+                end
         end
 
         b.close
