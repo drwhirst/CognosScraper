@@ -21,6 +21,7 @@ class IbmInfosController < ApplicationController
         report = false
         graphs = []
         dashboard = false
+        sum_of_all_graphs = 0
 
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
@@ -62,6 +63,7 @@ class IbmInfosController < ApplicationController
                 #Area Graph test
                 area_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.area\"]")
                 if area_graph_test.count > 0
+                    sum_of_all_graphs += area_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -86,6 +88,7 @@ class IbmInfosController < ApplicationController
                 #river graph tests
                 river_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.river\"]")
                 if river_graph_test.count > 0
+                    sum_of_all_graphs += river_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -110,6 +113,7 @@ class IbmInfosController < ApplicationController
                 #Smooth Area
                 smooth_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.smoothArea\"]")
                 if smooth_graph_test.count > 0
+                    sum_of_all_graphs += smooth_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -134,6 +138,7 @@ class IbmInfosController < ApplicationController
                 #Step Graph
                 step_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.stepArea\"]")
                 if step_graph_test.count > 0
+                    sum_of_all_graphs += step_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -158,6 +163,7 @@ class IbmInfosController < ApplicationController
                 #Box Plot graph tests
                 box_plot_test = doc.xpath("//*[@class=\"Rave2BundleBoxPlotRenderer large\"]")
                 if box_plot_test.count > 0
+                    sum_of_all_graphs += box_plot_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -183,6 +189,7 @@ class IbmInfosController < ApplicationController
                 #Bubble Graph
                 bubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.bubble\"]")
                 if bubble_graph_test.count > 0
+                    sum_of_all_graphs += bubble_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
@@ -207,6 +214,7 @@ class IbmInfosController < ApplicationController
                 #Hierarchical Packed Bubbles
                 hpbubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.hierarchicalPackedBubble\"]")
                 if hpbubble_graph_test.count > 0
+                    sum_of_all_graphs += hpbubble_graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
