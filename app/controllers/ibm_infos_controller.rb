@@ -23,9 +23,9 @@ class IbmInfosController < ApplicationController
         dashboard = false
         sum_of_all_graphs = 0
         graph_types = ['hierarchicalPackedBubble', 'area', 'river','smoothArea', 'stepArea', 'heatmap', 'bubble', 'line', 'smoothLine', 'tiledmap', 'marimekko', 'network', 
-        'pie', 'radar', 'treemap', 'waterfall', 'wordcloud', 'dial', 'simpleCombination', 
+        'pie', 'radar', 'treemap', 'waterfall', 'wordcloud', 'dial', 'simpleCombination']
         graphs_with_legends = ['hierarchicalPackedBubble', 'heatmap', 'bubble']
-
+    
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
         b.goto(ibm_login_url)
