@@ -17,11 +17,14 @@ class IbmInfosController < ApplicationController
         @info.password = params[:ibm_info][:password]
         @info.report_name = params[:ibm_info][:report_name]
         page_names = []
-        count = 0
+        legend_count = 0
         report = false
         graphs = []
         dashboard = false
         sum_of_all_graphs = 0
+        graph_types = ['hierarchicalPackedBubble', 'area', 'river','smoothArea', 'stepArea', 'heatmap', 'bubble', 'line', 'smoothLine', 'tiledmap', 'marimekko', 'network', 
+        'pie', 'radar', 'treemap', 'waterfall', 'wordcloud', 'dial', 'simpleCombination', 
+        graphs_with_legends = ['hierarchicalPackedBubble', 'heatmap', 'bubble']
 
         b = Watir::Browser.new(:chrome)
         ibm_login_url = 'https://www.ibm.com/account/reg/us-en/login?formid=urx-34710'
@@ -60,21 +63,38 @@ class IbmInfosController < ApplicationController
         doc = Nokogiri::HTML.parse(b.html)
 
         if report == true
-                #Area Graph test
-                area_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.area\"]")
-                if area_graph_test.count > 0
-                    sum_of_all_graphs += area_graph_test.count
+            graph_types.each do |g|
+                graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.#{g}\"]")
+                if graph_test.count > 0
+                    sum_of_all_graphs += graph_test.count
                     graph = {}
                     arr_x = []
                     arr_y = []
-                    area_graph_test.count.times do
-                        graph[:type] = 'Area'
-                
-                        area_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
+                    graph_test.each do |t|
+                        graph[:type] = g
+
+                        legend_xml_all = doc.css('#S_2_legend')
+                        legend_xml = legend_xml_all[legend_count]
+                        legend = {}
+
+                        graphs_with_legends.each do |x| 
+                            if graph[:type] == x
+                                1.times do
+                                    legend[:min_value] = legend_xml.css('#o_0_startLabel').text
+                                    legend[:max_value] = legend_xml.css('#o_0_endLabel').text
+                                    legend[:label] = legend_xml.css('.lgd-title').text
+                                    legend_count += 1
+                                end
+                            end
+                        end
+
+                        graph[:legend] = legend
+
+                        t.css('text').each do |i|
+                            if i.text.include?('0')
+                                arr_y << i.text
                             else
-                                arr_x << t.text
+                                arr_x << i.text
                             end
                         end
                         arr_y.delete_if { |x| x.empty? }
@@ -84,163 +104,7 @@ class IbmInfosController < ApplicationController
                         graphs << graph
                     end
                 end
-
-                #river graph tests
-                river_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.river\"]")
-                if river_graph_test.count > 0
-                    sum_of_all_graphs += river_graph_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    river_graph_test.count.times do
-                        graph[:type] = 'River'
-                
-                        river_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                    end
-                end
-
-                #Smooth Area
-                smooth_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.smoothArea\"]")
-                if smooth_graph_test.count > 0
-                    sum_of_all_graphs += smooth_graph_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    smooth_graph_test.count.times do
-                        graph[:type] = 'Smooth Area'
-                
-                        smooth_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                    end
-                end
-
-                #Step Graph
-                step_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.stepArea\"]")
-                if step_graph_test.count > 0
-                    sum_of_all_graphs += step_graph_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    step_graph_test.count.times do
-                        graph[:type] = 'Step'
-                
-                        step_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                    end
-                end
-
-                #Box Plot graph tests
-                box_plot_test = doc.xpath("//*[@class=\"Rave2BundleBoxPlotRenderer large\"]")
-                if box_plot_test.count > 0
-                    sum_of_all_graphs += box_plot_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    box_plot_test.count.times do
-                        graph[:type] = 'Box Plot'
-                
-                        box_plot_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                        count += 1
-                    end
-                end
-
-                #Bubble Graph
-                bubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.bubble\"]")
-                if bubble_graph_test.count > 0
-                    sum_of_all_graphs += bubble_graph_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    bubble_graph_test.count.times do
-                        graph[:type] = 'Bubble'
-                
-                        bubble_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                    end
-                end
-
-                #Hierarchical Packed Bubbles
-                hpbubble_graph_test = doc.xpath("//*[@data-vizbundle=\"com.ibm.vis.hierarchicalPackedBubble\"]")
-                if hpbubble_graph_test.count > 0
-                    sum_of_all_graphs += hpbubble_graph_test.count
-                    graph = {}
-                    arr_x = []
-                    arr_y = []
-                    hpbubble_graph_test.count.times do
-                        graph[:type] = 'Bubble'
-
-                        legend_xml = doc.css('#S_2_legend')
-                        graph[:legend] = {}
-                        graph[:legend][:min_value] = doc.css('#o_0_startLabel').text
-                        graph[:legend][:max_value] = doc.css('#o_0_endLabel').text
-                        graph[:legend[:label] = doc.css('.lgd-title').text #may pick up multiple as a class selector
-                
-                        hpbubble_graph_test.css('text').each do |t|
-                            if t.text.include?('0')
-                                arr_y << t.text
-                            else
-                                arr_x << t.text
-                            end
-                        end
-                        arr_y.delete_if { |x| x.empty? }
-                        arr_x.delete_if { |x| x.empty? }
-                        graph[:y_values] = arr_y
-                        graph[:x_values] = arr_x
-                        graphs << graph
-                    end
-                end
+            end
         end
 
         b.close
