@@ -23,7 +23,7 @@ class IbmInfosController < ApplicationController
         dashboard = false
         sum_of_all_graphs = 0
         graph_types = ['hierarchicalPackedBubble', 'area', 'river','smoothArea', 'stepArea', 'heatmap', 'bubble', 'line', 'smoothLine', 'tiledmap', 'marimekko', 'network', 
-        'pie', 'radar', 'treemap', 'waterfall', 'wordcloud', 'dial', 'simpleCombination', 
+        'pie', 'radar', 'treemap', 'waterfall', 'wordcloud', 'dial', 'simpleCombination'] 
         graphs_with_legends = ['hierarchicalPackedBubble', 'heatmap', 'bubble']
 
         b = Watir::Browser.new(:chrome)
@@ -35,15 +35,16 @@ class IbmInfosController < ApplicationController
         b.text_field(name: 'password').set @info.password
         b.button(type: 'submit').click
 
-        b.wait
-        b.button(type: 'submit').click
-        b.wait
+        sleep 10
+        if b.button(type: 'submit').exists?
+            b.button(type: 'submit').click
+        end
 
         #Go to the report
+        sleep 15
         b.button(title: 'My content').click
-        b.wait
+        sleep 15
         b.div(title: @info.report_name).click
-        b.wait
         
         #Check to see if the report is actually a dashboard
         if b.url.include?('dashboard')
@@ -53,6 +54,7 @@ class IbmInfosController < ApplicationController
         end
 
         #Switch to the correct iframe where the report document is housed
+        sleep 15
         if b.iframe(id: 'rsIFrameManager_1').exists? && dashboard == false
             b.driver.switch_to.frame('rsIFrameManager_1')
         elsif b.iframe.exists? && dashboard == false
@@ -106,6 +108,7 @@ class IbmInfosController < ApplicationController
                 end
             end
         end
+        p graphs
 
         b.close
 
