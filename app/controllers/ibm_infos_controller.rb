@@ -18,9 +18,10 @@ class IbmInfosController < ApplicationController
         @info.report_name = params[:ibm_info][:report_name]
         page_names = []
         count = 0
+        legend_count = 0
+        legend_count_2 = 0
         page_xml_count = 0
         page_xml = []
-        legend_count = 0
         report = false
         graphs = []
         dashboard = false
@@ -112,20 +113,39 @@ class IbmInfosController < ApplicationController
                         graph_test.each do |t|
                             graph[:type] = g
 
-                            legend_xml_all = page_xml[count][:xml].css('#S_2_legend')
-                            legend_xml = legend_xml_all[legend_count]
-                            legend = {}
-
-                            graphs_with_legends.each do |x| 
-                                if graph[:type] == x && legend_xml != nil
-                                    legend[:min_value] = legend_xml.css('#o_0_startLabel').text
-                                    legend[:max_value] = legend_xml.css('#o_0_endLabel').text
-                                    legend[:label] = legend_xml.css('.lgd-title').text
-                                    legend_count += 1
+                            if page_xml[count][:xml].css('#S_2_legend').count > 0
+                                legend_xml_all = page_xml[count][:xml].css('#S_2_legend')
+                                legend_xml = legend_xml_all[legend_count]
+                                legend = {}
+                                graphs_with_legends.each do |x| 
+                                    if graph[:type] == x && legend_xml != nil
+                                        legend[:min_value] = legend_xml.css('#o_0_startLabel').text
+                                        legend[:max_value] = legend_xml.css('#o_0_endLabel').text
+                                        legend[:label] = legend_xml.css('.lgd-title').text
+                                        legend_count += 1
+                                    end
                                 end
                             end
-
-                            graph[:legend] = legend
+                            
+                            if page_xml[count][:xml].css('#S_3_legend').count > 0
+                                legend_xml_all = page_xml[count][:xml].css('#S_3_legend')
+                                legend_xml = legend_xml_all[legend_count_2]
+                                legend_2 = {}
+                                graphs_with_legends.each do |x| 
+                                    if graph[:type] == x && legend_xml != nil
+                                        legend[:min_value] = legend_xml.css('#o_2_startLabel').text
+                                        legend[:max_value] = legend_xml.css('#o_2_endLabel').text
+                                        legend[:label] = legend_xml.css('.lgd-title').text
+                                        legend_count_2 += 1
+                                    end
+                                end
+                            end
+                            
+                            if legend
+                                graph[:legend] = legend
+                            else
+                                graph[:legend] = legend_2
+                            end
 
                             t.css('text').each do |i|
                                 if i.text.include?('0')
@@ -143,8 +163,11 @@ class IbmInfosController < ApplicationController
                     end
                 end
                 count += 1
+                legend_count = 0
+                legend_count_2 = 0
             end
         end
+        graphs.uniq!
         p graphs
         b.close
 
